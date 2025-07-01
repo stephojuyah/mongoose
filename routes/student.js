@@ -5,8 +5,13 @@ require('dotenv').config();
 
 const Student = require('../models/student');
 
-route.post(`/student`, async ( req, res) => {
+// endpoint to create a new student document
+// This endpoint creates a new student document in the database
+route.post(`/all_student`, async ( req, res) => {
   const { name, age, level } = req.body;
+  if (!name || !age || !level) {
+    return res.status(400).send({ error: 'Name, age, and level are required' });
+  }
     try {
     const newStudent = new Student();
     newStudent.name = name;
@@ -16,10 +21,12 @@ route.post(`/student`, async ( req, res) => {
     const savedStudent = await newStudent.save();
     return(res.send({ message: 'student saved successfully', student: savedStudent }));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).send({ error: err.message });
     }
 });
 
+// endpoint to get all students
+// This endpoint retrieves all student documents from the database
 route.get('/students', async (req, res) => {
   try {
     const students = await Student.find().lean();
@@ -29,28 +36,39 @@ route.get('/students', async (req, res) => {
   }
 });
 
-
-route.put('/students/:id', async (req, res) => {
+// endpoint to get a student by ID
+// This endpoint retrieves a single student document by its ID
+route.put('/students', async (req, res) => {
   try {
-    const { name, level } = req.body;
-    const updatedstudent = await Student.findByIdAndUpdate(
-      req.params.id,
-      { name, level },
+    const { name, level, id } = req.body;
+
+    if (!id) {
+      return res.status(400).send({ error: 'ID is required' });
+    }
+
+    const updatedStudent = await Student.findByIdAndUpdate(
+      id,
+      { name: name, level: level },
       { new: true }
     );
-    res.json(updatedStudent);
+    res.send(updatedStudent);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-
-route.delete('/students/:id', async (req, res) => {
+// endpoint to delete a student by ID
+// This endpoint deletes a student document by its ID
+route.delete('/students', async (req, res) => {
+  const { id } = req.body;
+  if (!id) {
+    return res.status(400).send({ error: 'ID is required' });
+  }
   try {
-    await Student.findByIdAndDelete(req.params.id);
-    res.json({ message: 'student deleted successfully' });
+    await Student.findByIdAndDelete(id);
+    res.send({ message: 'student deleted successfully' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).send({ error: err.message });
   }
 });
 
